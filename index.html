@@ -138,7 +138,6 @@
     .order-card {
       background: var(--color-white);
       border: 1px solid var(--color-border);
-      border-left-width: 4px;
       border-radius: var(--radius-card);
       padding: 12px;
       cursor: pointer;
@@ -149,13 +148,6 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
-    /* Left accent border by status */
-    .card-open      { border-left-color: var(--status-open-accent); }
-    .card-preparing { border-left-color: var(--status-preparing-accent); }
-    .card-ready     { border-left-color: var(--status-ready-accent); }
-    .card-en-route  { border-left-color: var(--status-en-route-accent); }
-    .card-delivered { border-left-color: var(--status-delivered-accent); }
-    .card-fulfilled { border-left-color: var(--status-fulfilled-accent); }
 
     .order-badge {
       display: inline-block;
@@ -602,7 +594,7 @@
     function renderCard(order) {
       const cfg = STATUS_CONFIG[order.state];
       const card = document.createElement('div');
-      card.className = `order-card ${cfg.cardClass}`;
+      card.className = 'order-card';
       card.id = `card-${order.id}`;
       card.onclick = () => openModal(order.id);
 
