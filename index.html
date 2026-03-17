@@ -25,10 +25,8 @@
       --color-address-bg: #FEF9C3;
       --color-address-border: #FDE047;
 
-      --color-pickup-badge-bg: #F3F4F6;
-      --color-pickup-badge-text: #6B7280;
-      --color-uber-badge-bg: #DBEAFE;
-      --color-uber-badge-text: #1D4ED8;
+      --color-order-badge-bg: #F3F4F6;
+      --color-order-badge-text: #6B7280;
 
       --radius-card: 10px;
       --radius-badge: 4px;
@@ -163,9 +161,8 @@
       margin-bottom: 7px;
     }
 
-    /* Card-level order badge colours — by order type, not status */
-    .badge-pickup { background: var(--color-pickup-badge-bg); color: var(--color-pickup-badge-text); }
-    .badge-uber   { background: var(--color-uber-badge-bg);   color: var(--color-uber-badge-text); }
+    /* Card-level order badge — single style for all order types */
+    .badge-order { background: var(--color-order-badge-bg); color: var(--color-order-badge-text); }
 
     /* Courier ETA pill colours — kept, still status-based */
     .badge-ready     { background: var(--status-ready-bg);     color: var(--status-ready-text); }
@@ -265,21 +262,6 @@
     }
 
     .modal-badge-wrap { margin-bottom: 16px; }
-
-    .modal-courier-panel {
-      border-radius: 8px;
-      padding: 10px 14px;
-      margin-bottom: 14px;
-    }
-
-    .courier-panel-title {
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .courier-panel-sub {
-      font-size: 13px;
-    }
 
     .modal-items {
       border: 1px solid var(--color-border);
@@ -431,12 +413,6 @@
       <div class="modal-customer" id="modal-customer"></div>
       <div class="modal-badge-wrap">
         <span class="order-badge" id="modal-badge"></span>
-      </div>
-
-      <!-- Courier panel: shown for uber in ready/en_route/delivered states -->
-      <div class="modal-courier-panel" id="modal-courier-panel" style="display:none">
-        <div class="courier-panel-title" id="modal-courier-title"></div>
-        <div class="courier-panel-sub" id="modal-courier-sub"></div>
       </div>
 
       <div class="modal-items" id="modal-items"></div>
@@ -604,26 +580,14 @@
       card.id = `card-${order.id}`;
       card.onclick = () => openModal(order.id);
 
-      // Courier pill: shown on card for uber in en_route/delivered states
-      let courierPill = '';
-      if (order.type === 'uber' && order.state === 'ready') {
-        courierPill = `<div class="card-status-pill badge-ready">🛵 ${order.courier.name} · ${order.courier.eta}</div>`;
-      } else if (order.type === 'uber' && order.state === 'en_route') {
-        const deliveryEta = order.courier.deliveryEta || order.courier.eta;
-        courierPill = `<div class="card-status-pill badge-en-route">🛵 En Route · Delivery ${deliveryEta}</div>`;
-      } else if (order.type === 'uber' && order.state === 'delivered') {
-        courierPill = `<div class="card-status-pill badge-delivered">✅ Delivered · ${order.courier.name}</div>`;
-      }
-
       const startPrepBtn = order.state === 'open'
         ? `<button class="card-start-prep" onclick="event.stopPropagation();advanceState('${order.id}')">Start Prep</button>`
         : '';
 
       card.innerHTML = `
-        <span class="order-badge ${order.type === 'pickup' ? 'badge-pickup' : 'badge-uber'}">${badgeLabel(order)}</span>
+        <span class="order-badge badge-order">${badgeLabel(order)}</span>
         <div class="customer-name">${order.customer}</div>
         <div class="order-meta">${order.time} · ${order.total}</div>
-        ${courierPill}
         ${startPrepBtn}
       `;
       return card;
@@ -697,29 +661,7 @@
 
       const badge = document.getElementById('modal-badge');
       badge.textContent = badgeLabel(order);
-      badge.className = `order-badge ${order.type === 'pickup' ? 'badge-pickup' : 'badge-uber'}`;
-
-      // Courier panel: content and style vary by state
-      const courierPanel = document.getElementById('modal-courier-panel');
-      if (order.type === 'uber' && order.courier) {
-        const panelCfg = {
-          ready:     { bg: 'var(--status-ready-bg)',     border: '#10B981', textColor: 'var(--status-ready-text)',     icon: '🛵', title: `Courier arriving ${order.courier.eta}`, sub: `${order.courier.name} · Uber Direct` },
-          en_route:  { bg: 'var(--status-en-route-bg)',  border: '#7C3AED', textColor: 'var(--status-en-route-text)',  icon: '🛵', title: `En Route · ${order.courier.name}`,         sub: `Delivery ETA ${order.courier.deliveryEta || order.courier.eta}` },
-          delivered: { bg: 'var(--status-delivered-bg)', border: '#059669', textColor: 'var(--status-delivered-text)', icon: '✅', title: `Delivered · ${order.courier.name}`,          sub: 'Order successfully delivered' },
-        }[order.state];
-
-        if (panelCfg) {
-          courierPanel.style.cssText = `display:block;background:${panelCfg.bg};border:1px solid ${panelCfg.border};border-radius:8px;padding:10px 14px;margin-bottom:14px`;
-          document.getElementById('modal-courier-title').style.color = panelCfg.textColor;
-          document.getElementById('modal-courier-sub').style.color = panelCfg.textColor;
-          document.getElementById('modal-courier-title').textContent = `${panelCfg.icon} ${panelCfg.title}`;
-          document.getElementById('modal-courier-sub').textContent = panelCfg.sub;
-        } else {
-          courierPanel.style.display = 'none';
-        }
-      } else {
-        courierPanel.style.display = 'none';
-      }
+      badge.className = 'order-badge badge-order';
 
       // Items table
       document.getElementById('modal-items').innerHTML =
