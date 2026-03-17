@@ -25,6 +25,11 @@
       --color-address-bg: #FEF9C3;
       --color-address-border: #FDE047;
 
+      --color-pickup-badge-bg: #F3F4F6;
+      --color-pickup-badge-text: #6B7280;
+      --color-uber-badge-bg: #DBEAFE;
+      --color-uber-badge-text: #1D4ED8;
+
       --radius-card: 10px;
       --radius-badge: 4px;
       --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -158,13 +163,14 @@
       margin-bottom: 7px;
     }
 
-    /* Badge colours by status */
-    .badge-open      { background: var(--status-open-bg);      color: var(--status-open-text); }
-    .badge-preparing { background: var(--status-preparing-bg); color: var(--status-preparing-text); }
+    /* Card-level order badge colours — by order type, not status */
+    .badge-pickup { background: var(--color-pickup-badge-bg); color: var(--color-pickup-badge-text); }
+    .badge-uber   { background: var(--color-uber-badge-bg);   color: var(--color-uber-badge-text); }
+
+    /* Courier ETA pill colours — kept, still status-based */
     .badge-ready     { background: var(--status-ready-bg);     color: var(--status-ready-text); }
     .badge-en-route  { background: var(--status-en-route-bg);  color: var(--status-en-route-text); }
     .badge-delivered { background: var(--status-delivered-bg); color: var(--status-delivered-text); }
-    .badge-fulfilled { background: var(--status-fulfilled-bg); color: var(--status-fulfilled-text); }
 
     .order-card .customer-name {
       font-size: 13px;
@@ -614,7 +620,7 @@
         : '';
 
       card.innerHTML = `
-        <span class="order-badge ${cfg.badgeClass}">${badgeLabel(order)}</span>
+        <span class="order-badge ${order.type === 'pickup' ? 'badge-pickup' : 'badge-uber'}">${badgeLabel(order)}</span>
         <div class="customer-name">${order.customer}</div>
         <div class="order-meta">${order.time} · ${order.total}</div>
         ${courierPill}
@@ -654,14 +660,12 @@
     const CTA_LABELS = {
       open:      'Mark as Preparing',
       preparing: 'Mark as Ready',
-      ready:     { pickup: 'Mark as Fulfilled', uber: 'Hand to Courier' },
+      ready:     'Mark as Fulfilled',
       en_route:  'Mark as Delivered',
     };
 
     function ctaLabel(order) {
-      const label = CTA_LABELS[order.state];
-      if (typeof label === 'object') return label[order.type];
-      return label;
+      return CTA_LABELS[order.state];
     }
 
     const TERMINAL_STATES = new Set(['fulfilled', 'delivered']);
@@ -693,7 +697,7 @@
 
       const badge = document.getElementById('modal-badge');
       badge.textContent = badgeLabel(order);
-      badge.className = `order-badge ${cfg.badgeClass}`;
+      badge.className = `order-badge ${order.type === 'pickup' ? 'badge-pickup' : 'badge-uber'}`;
 
       // Courier panel: content and style vary by state
       const courierPanel = document.getElementById('modal-courier-panel');
